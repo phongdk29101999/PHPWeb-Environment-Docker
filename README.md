@@ -67,7 +67,7 @@ Mỗi lần sử dụng chỉ cần khởi động container vào máy ảo kh�
 
     `docker run exec -it centos bash`
 
--Khởi động service apache:
+- Khởi động service apache:
 
     `service httpd start`
     
