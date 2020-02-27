@@ -31,7 +31,7 @@
 
 - Chạy vào container:
 
-    `docker run exec -it centos bash`
+    `docker exec -it centos bash`
     
 - Khởi động service mysql:
 
