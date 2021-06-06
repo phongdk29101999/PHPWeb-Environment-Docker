@@ -1,54 +1,43 @@
-FROM ubuntu:18.04
+FROM amazonlinux:2
 
-## set noniteractive mode
-ENV  DEBIAN_FRONTEND=noninteractive
+# install nginx
+RUN amazon-linux-extras install php7.3 nginx1
 
-## install nginx, supervisor and other necessary tools
-RUN apt-get update && apt-get -y install \
-    nginx \
-    supervisor \
-    cron \
-    curl \
-    zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN yum -y update
+RUN yum -y install file zip \
+    && yum -y install php-mbstring php-intl php-xml php-gd php-pear php-devel gcc make \
+    && yum clean all \
+    && rm -rf /var/cache/yum
 
-## install php and related modules
-RUN apt-get update && apt-get -y install \
-    php \
-    php-cli \
-    php-curl \
-    php-fpm \
-    php-gd \
-    php-intl \
-    php-mbstring \
-    php-mysqlnd \
-    php-opcache \
-    php-pdo \
-    php-pear \
-    php-sqlite3 \
-    php-zip \
-    php-xml \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN pecl install xdebug
 
-## add user "nginx" to nginx
-RUN useradd --shell /sbin/nologin nginx
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
+RUN mv composer.phar /usr/local/bin/composer
 
-## copy config files
-COPY files/etc  /etc
+RUN curl -sL https://rpm.nodesource.com/setup_14.x | bash -
+RUN yum install nodejs -y
 
-RUN mkdir -p /var/tmp/logs \
-    && mkdir -p /var/tmp/cache/persistent \
-    && mkdir -p /var/tmp/cache/models \
-    && mkdir -p /var/tmp/tmp \
-    && touch /var/tmp/$(date +%s) \
-    && touch /var/tmp/logs/php-fpm-www-error.log \
-    && chmod -R 777 /var/tmp \
-    && mkdir /tmp/opcache && chmod 777 /tmp/opcache \
-    && mkdir /tmp/session && chmod 777 /tmp/session \
-    && mkdir /tmp/wsdlcache && chmod 777 /tmp/wsdlcache \
-    && mkdir /run/php-fpm && chmod 777 /run/php-fpm
+# Config for PHP
+COPY nginx/php.ini /etc/
 
-ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
+## change uid, gid for apache
+RUN usermod -u 1000 apache && groupmod -g 1000 apache
+RUN chown apache:apache /var/lib/php/session
 
+# Config for nginx
+COPY nginx/conf.d/review.conf /etc/nginx/conf.d/ 
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+
+# SSL for nginx
+RUN openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -subj /CN=localhost -keyout localhost.key -out localhost.crt
+RUN cp -p localhost.crt /etc/nginx/localhost.crt
+RUN cp -p localhost.key /etc/nginx/localhost.key
+
+EXPOSE 443 80
+
+COPY startup.sh /startup.sh
+RUN chmod 744 /startup.sh
+CMD ["/startup.sh"]

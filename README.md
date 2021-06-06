@@ -1,20 +1,33 @@
-#  Set up enviroment docker for cakephp
-----
-## Requiments:
-Docker-CE
-## Build:
-- Go to project and run command:
-    ```
-    $ mkdir env && cd env
-    ```
-- Download and unarchive to folder `env` from [releases page](https://github.com/phongdk29101999/Set-up-environment-cakephp/releases/tag/2.0)
-- Run command:
-    ```
-    $ docker build　-t env:latest . && sh docker-launch.sh
-    ```
-## Access to web app
-    ```
-    http://localhost
-    https://localhost
-    ```
-## Connect to mysql with port `3306`
+# Set up environment for framework php
+> Environment for framework php such as laravel, cakephp, ... using docker with nginx, mysql
+
+## Requirement
+
+- install Docker-CE
+- put your project into `htdocs` folder
+- if you use laravel framework, please remove `cake.conf` file or else remove `laravel.conf`
+- I used this environment for cakephp and laravel, so can have error if use other framework. You can edit line 'root' and 'index' of file in `conf.d` folder or contact me.
+
+## build
+
+```
+$ docker-compose build
+```
+
+## run
+
+```
+$ docker-compose up -d
+```
+
+## Access to web
+
+```
+http://localhost
+```
+
+## access to phpMyAdmin
+
+```
+http://localhost:8080
+```

@@ -1,0 +1,56 @@
+version: '2.1'
+
+services:
+  web_nginx:
+    build: '.'
+    container_name: web_nginx
+    volumes:
+      - ./nginx/www:/var/www
+    ports:
+      - 443:443
+      - 80:80
+    restart: always
+    depends_on:
+      - web_mysql
+    links:
+      - web_mysql
+  web_mysql:
+    image: mysql:5.7
+    container_name: web_mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    environment:
+      MYSQL_DATABASE: web_db
+      MYSQL_USER: web_user
+      MYSQL_PASSWORD: web_password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    hostname: mysql
+    restart: always
+  test_web_mysql:
+    image: mysql:5.7
+    container_name: test_web_mysql
+    ports:
+      - 3307:3306
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    environment:
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    hostname: test_mysql
+    restart: always
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - web_mysql
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=mysql
+      - PMA_USER=root
+    ports:
+      - '8080:80'
