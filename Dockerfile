@@ -28,7 +28,7 @@ RUN usermod -u 1000 apache && groupmod -g 1000 apache
 RUN chown apache:apache /var/lib/php/session
 
 # Config for nginx
-COPY nginx/conf.d/review.conf /etc/nginx/conf.d/ 
+COPY nginx/conf.d/server.conf /etc/nginx/conf.d/ 
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 # SSL for nginx
