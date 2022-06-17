@@ -3,18 +3,18 @@ FROM amazonlinux:2
 # install nginx
 RUN amazon-linux-extras install php7.3 nginx1
 
+# install necessary package
 RUN yum -y update
-RUN yum -y install file zip \
+RUN yum -y install file zip wget \
     && yum -y install php-mbstring php-intl php-xml php-gd php-pear php-devel gcc make \
     && yum clean all \
     && rm -rf /var/cache/yum
 
+# install xdebug
 RUN pecl install xdebug
 
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-RUN php composer-setup.php
-RUN php -r "unlink('composer-setup.php');"
+# install composer
+RUN wget https://raw.githubusercontent.com/composer/getcomposer.org/92769472d2d1457c681e9e01ba95e4c36054e86e/web/installer -O - -q | php -- --quiet
 RUN mv composer.phar /usr/local/bin/composer
 
 RUN curl -sL https://rpm.nodesource.com/setup_14.x | bash -
